@@ -1,0 +1,46 @@
+--- a/src/joystick/hidapi/SDL_hidapi_switch.c
++++ b/src/joystick/hidapi/SDL_hidapi_switch.c
+@@ -287,6 +287,8 @@
+     SDL_bool m_bHasSensorData;
+     Uint32 m_unLastInput;
+     Uint32 m_unLastIMUReset;
++    Uint8 last_observed_input_mode;
++    Uint32 last_sensor_mode_restore;
+     Uint32 m_unIMUSampleTimestamp;
+     Uint32 m_unIMUSamples;
+     Uint32 m_unIMUUpdateIntervalUS;
+@@ -2293,6 +2295,7 @@
+         if (ctx->m_bInputOnly) {
+             HandleInputOnlyControllerState(joystick, ctx, (SwitchInputOnlyControllerStatePacket_t *)&ctx->m_rgucReadBuffer[0]);
+         } else {
++            ctx->last_observed_input_mode = ctx->m_rgucReadBuffer[0];
+             ctx->m_nCurrentInputMode = ctx->m_rgucReadBuffer[0];
+ 
+             switch (ctx->m_rgucReadBuffer[0]) {
+@@ -2306,6 +2309,26 @@
+             default:
+                 break;
+             }
++        }
++    }
++
++    if (joystick && size >= 0 && ctx->m_bReportSensors &&
++        ctx->last_observed_input_mode == k_eSwitchInputReportIDs_SimpleControllerState &&
++        (!ctx->last_sensor_mode_restore || (Uint32)(now - ctx->last_sensor_mode_restore) >= 5000)) {
++        if (ctx->last_sensor_mode_restore) {
++            SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Switch sensor report mode is reverting; restoring full reports");
++        }
++        ctx->last_sensor_mode_restore = now;
++        if (device->updating) {
++            SDL_UnlockMutex(device->dev_lock);
++        }
++        /* SetInputMode caches the requested mode even when its command fails. */
++        ctx->m_nCurrentInputMode = ctx->last_observed_input_mode;
++        if (!SetInputMode(ctx, GetSensorInputMode(ctx))) {
++            SDL_LogWarn(SDL_LOG_CATEGORY_INPUT, "Could not restore Switch sensor report mode: %s", SDL_GetError());
++        }
++        if (device->updating) {
++            SDL_LockMutex(device->dev_lock);
+         }
+     }
+ 
