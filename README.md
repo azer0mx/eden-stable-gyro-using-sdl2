@@ -7,6 +7,12 @@
 -->
 <!-- lang: en-GB -->
 
+> **Unofficial personal fork:** This repository is based on Eden v0.2.1 and was
+> modified on October 24, 2026 to address SDL2 controller motion reporting on
+> SteamOS. It is not affiliated with or endorsed by the Eden project. See
+> [the local fix and build notes](docs/StableGyro.md) for details. Original credits
+> and licenses remain below and in the repository's license files.
+
 <h1 align="center">
   <br>
   <a href="https://git.eden-emu.dev/eden-emu/eden"><img src="./dist/qt_themes/default/icons/256x256/eden.png" alt="Eden" width="200"></a>
